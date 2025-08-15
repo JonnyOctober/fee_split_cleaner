@@ -1,0 +1,2 @@
+run = "python deal_sheet_ready_for_upload.py"
+language = "python3"

@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fee Split Cleaner - Drag & Drop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            margin-bottom: 40px;
+        }
+
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: #fafafa;
+            margin-bottom: 20px;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: scale(1.02);
+        }
+
+        .upload-area h3 {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .upload-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .file-info {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .file-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .file-size {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .process-btn {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .process-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(39, 174, 96, 0.3);
+        }
+
+        .process-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            margin-top: 40px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .result-card h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .result-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .result-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .result-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(231, 76, 60, 0.3);
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #c33;
+        }
+
+        .field-info {
+            background: #e8f4fd;
+            border: 1px solid #bee5eb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .field-info h4 {
+            color: #0c5460;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .field-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .field-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .field-list li:last-child {
+            border-bottom: none;
+        }
+
+        .field-list .new-field {
+            background: #d4edda;
+            color: #155724;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Fee Split Cleaner</h1>
+            <p>Transform your fee split data into a clean, upload-ready format</p>
+        </div>
+
+        <div class="content">
+            <div class="upload-section">
+                <h2>📁 Upload Your Files</h2>
+                <p style="margin-bottom: 20px; color: #666;">
+                    Drag and drop your CSV files below, or click to browse. You'll need both the fee splits file and the agent reference file.
+                </p>
+
+                <div class="upload-area" id="uploadArea">
+                    <h3>📤 Drop files here or click to browse</h3>
+                    <p style="color: #999; margin-bottom: 20px;">Supports CSV files up to 16MB</p>
+                    
+                    <button class="upload-btn" onclick="document.getElementById('sourceFile').click()">
+                        Choose Fee Splits File
+                    </button>
+                    <button class="upload-btn" onclick="document.getElementById('agentFile').click()">
+                        Choose Agent Reference File
+                    </button>
+                    
+                    <input type="file" id="sourceFile" class="file-input" accept=".csv" onchange="handleFileSelect(this, 'source')">
+                    <input type="file" id="agentFile" class="file-input" accept=".csv" onchange="handleFileSelect(this, 'agent')">
+                </div>
+
+                <div class="file-info" id="fileInfo">
+                    <h4>Selected Files:</h4>
+                    <div id="fileList"></div>
+                </div>
+
+                <button class="process-btn" id="processBtn" onclick="processFiles()" disabled>
+                    🔄 Process Files
+                </button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Processing your files... This may take a few minutes for large datasets.</p>
+            </div>
+
+            <div class="results" id="results">
+                <div class="result-card">
+                    <h3>✅ Processing Complete!</h3>
+                    <div class="result-grid">
+                        <div class="result-item">
+                            <div class="result-value" id="totalRecords">0</div>
+                            <div class="result-label">Total Records</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-value" id="processedRecords">0</div>
+                            <div class="result-label">Processed Records</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-value" id="duplicatesRemoved">0</div>
+                            <div class="result-label">Duplicates Removed</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-value" id="accuracy">0%</div>
+                            <div class="result-label">Math Accuracy</div>
+                        </div>
+                    </div>
+                    
+                    <a href="#" class="download-btn" id="downloadBtn" download>
+                        📥 Download Cleaned File
+                    </a>
+                </div>
+            </div>
+
+            <div class="field-info">
+                <h4>📋 Database Fields Added</h4>
+                <p style="margin-bottom: 15px; color: #0c5460;">
+                    The following new fields have been added to the output. Make sure to add these to your database schema:
+                </p>
+                <ul class="field-list">
+                    <li><strong>Total to House from Agent</strong> <span class="new-field">NEW</span> - House profit from this specific agent</li>
+                    <li><strong>Unified Deal Close Date</strong> <span class="new-field">NEW</span> - Copy of Deal Date for consistency</li>
+                    <li><strong>Discrepancy</strong> <span class="new-field">NEW</span> - Difference between calculated and source Total to House</li>
+                    <li><strong>Deal ID - Legacy</strong> <span class="new-field">NEW</span> - Original Deal ID for validation</li>
+                    <li><strong>Split_ID_Legacy</strong> <span class="new-field">NEW</span> - Original Split ID</li>
+                    <li><strong>Override Percent</strong> <span class="new-field">NEW</span> - Override percentage value</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sourceFile = null;
+        let agentFile = null;
+
+        // Drag and drop functionality
+        const uploadArea = document.getElementById('uploadArea');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            uploadArea.classList.add('dragover');
+        }
+
+        function unhighlight(e) {
+            uploadArea.classList.remove('dragover');
+        }
+
+        uploadArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                // Auto-assign first file as source if no source file selected
+                if (!sourceFile) {
+                    handleFileSelect({ files: [files[0]] }, 'source');
+                } else if (!agentFile) {
+                    handleFileSelect({ files: [files[0]] }, 'agent');
+                }
+            }
+        }
+
+        function handleFileSelect(input, type) {
+            const file = input.files[0] || input.files[0];
+            if (!file) return;
+
+            if (type === 'source') {
+                sourceFile = file;
+            } else {
+                agentFile = file;
+            }
+
+            updateFileInfo();
+            checkFilesReady();
+        }
+
+        function updateFileInfo() {
+            const fileList = document.getElementById('fileList');
+            const fileInfo = document.getElementById('fileInfo');
+            
+            let html = '';
+            if (sourceFile) {
+                html += `<div class="file-item">
+                    <div>
+                        <div class="file-name">📊 Fee Splits: ${sourceFile.name}</div>
+                        <div class="file-size">${formatFileSize(sourceFile.size)}</div>
+                    </div>
+                </div>`;
+            }
+            if (agentFile) {
+                html += `<div class="file-item">
+                    <div>
+                        <div class="file-name">👥 Agent Reference: ${agentFile.name}</div>
+                        <div class="file-size">${formatFileSize(agentFile.size)}</div>
+                    </div>
+                </div>`;
+            }
+            
+            fileList.innerHTML = html;
+            fileInfo.classList.add('show');
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function checkFilesReady() {
+            const processBtn = document.getElementById('processBtn');
+            processBtn.disabled = !(sourceFile && agentFile);
+        }
+
+        async function processFiles() {
+            if (!sourceFile || !agentFile) return;
+
+            const loading = document.getElementById('loading');
+            const processBtn = document.getElementById('processBtn');
+            const results = document.getElementById('results');
+
+            loading.classList.add('show');
+            processBtn.disabled = true;
+            results.classList.remove('show');
+
+            const formData = new FormData();
+            formData.append('source_file', sourceFile);
+            formData.append('agent_ref_file', agentFile);
+
+            try {
+                const response = await fetch('/process', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                // Display results
+                document.getElementById('totalRecords').textContent = result.total_records || 'N/A';
+                document.getElementById('processedRecords').textContent = result.processed_records || 'N/A';
+                document.getElementById('duplicatesRemoved').textContent = result.duplicates_removed || 'N/A';
+                document.getElementById('accuracy').textContent = result.math_accuracy || 'N/A';
+
+                // Set download link
+                const downloadBtn = document.getElementById('downloadBtn');
+                downloadBtn.href = `/download/${result.output_filename}`;
+                downloadBtn.download = result.output_filename;
+
+                results.classList.add('show');
+
+            } catch (error) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error';
+                errorDiv.textContent = `Error: ${error.message}`;
+                document.querySelector('.upload-section').appendChild(errorDiv);
+            } finally {
+                loading.classList.remove('show');
+                processBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,67 @@
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Archive folders (not needed for the app)
+Archive_Web_App_Development/
+Archive_Unused_CSVs/
+Archive/
+Legacy_Files/
+Legacy_Scripts/
+1.0 Orphaned Splits/
+Analysis_Results/
+Target_Data/
+Analysis_Scripts/
+Intermediate_Files/
+Archive_Data_Files/
+
+# Data files (too large for Git)
+*.csv
+!Deal Split Report Target Field Names Example.csv
+
+# Output files
+Deal Sheet Ready for Upload*.csv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
